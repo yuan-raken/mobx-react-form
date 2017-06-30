@@ -1,9 +1,18 @@
 import { observe } from 'mobx';
-import _ from 'lodash';
+
+import _get from 'lodash/get';
+import _pick from 'lodash/pick';
+import _isString from 'lodash/isString';
 
 import Options from './Options';
 import Bindings from './Bindings';
-import utils from './utils';
+
+import {
+  props,
+  isStruct,
+  checkObserve,
+  hasUnifiedProps,
+  hasSeparatedProps } from './utils';
 
 export default class State {
 
@@ -50,18 +59,18 @@ export default class State {
   }
 
   initProps(initial) {
-    const initialProps = _.pick(initial, [
-      ...utils.props.separated,
-      ...utils.props.validation,
-      ...utils.props.function,
-      ...utils.props.hooks,
+    const initialProps = _pick(initial, [
+      ...props.separated,
+      ...props.validation,
+      ...props.function,
+      ...props.hooks,
     ]);
 
     this.set('initial', 'props', initialProps);
 
-    const isStruct = utils.isStruct(initial);
-    const $unified = utils.hasUnifiedProps(initial);
-    const $separated = utils.hasSeparatedProps(initial);
+    const $isStruct = isStruct(initial);
+    const $unified = hasUnifiedProps(initial);
+    const $separated = hasSeparatedProps(initial);
 
     if ($unified && $separated) {
       console.warn( // eslint-disable-line
@@ -71,7 +80,7 @@ export default class State {
       );
     }
 
-    if (($separated || isStruct) && !$unified) {
+    if (($separated || $isStruct) && !$unified) {
       this.strict = true;
       this.mode = 'separated';
       this.struct(initial.fields);
@@ -121,7 +130,7 @@ export default class State {
   }
 
   extra(data = null) {
-    if (_.isString(data)) return _.get(this.$extra, data);
+    if (_isString(data)) return _get(this.$extra, data);
     if (data === null) return this.$extra;
     this.$extra = data;
     return null;
@@ -129,7 +138,7 @@ export default class State {
 
   observeOptions() {
     // Fix Issue #201
-    observe(this.options.options, utils.checkObserve([{
+    observe(this.options.options, checkObserve([{
       // start observing fields validateOnChange
       type: 'update',
       key: 'validateOnChange',

@@ -1,5 +1,11 @@
 import { computed, action, observable } from 'mobx';
-import _ from 'lodash';
+
+import _each from 'lodash/each';
+import _merge from 'lodash/merge';
+import _map from 'lodash/map';
+import _isString from 'lodash/isString';
+import _isEmpty from 'lodash/isEmpty';
+import _isNil from 'lodash/isNil';
 
 import { $try } from './utils';
 
@@ -38,14 +44,14 @@ export default class Validator {
   }
 
   assignInitData({ form, options = {}, plugins = {}, schema = {} }) {
-    _.merge(this.plugins, plugins);
+    _merge(this.plugins, plugins);
     this.form = form;
     this.options = options;
     this.schema = schema;
   }
 
   initializePlugins() {
-    _.map({
+    _map({
       vjf: VJF,
       dvr: DVR,
       svk: SVK,
@@ -69,7 +75,7 @@ export default class Validator {
 
     return new Promise((resolve) => {
       // validate instance (form or filed)
-      if (instance.path || _.isString(path)) {
+      if (instance.path || _isString(path)) {
         this.validateField({
           field: instance,
           showErrors,
@@ -125,7 +131,7 @@ export default class Validator {
   relatedFieldValidation(field, showErrors) {
     if (!field.related || !field.related.length) return;
 
-    _.each(field.related, path =>
+    _each(field.related, path =>
       this.validateField({ path, showErrors, related: false }));
   }
 
@@ -138,14 +144,14 @@ export default class Validator {
   getDefaultErrorMessage() {
     // set defaultGenericError message from options
     const $default = this.options.get('defaultGenericError');
-    if (_.isString($default)) return $default;
+    if (_isString($default)) return $default;
     return 'The form is invalid';
   }
 
   @action
   invalidate(message = null) {
     // set custom genericErrorMessage if provided
-    if (_.isString(message)) {
+    if (_isString(message)) {
       this.$genericErrorMessage = message;
       return;
     }
@@ -154,7 +160,7 @@ export default class Validator {
   }
 
   checkSVKValidationPlugin() {
-    if (_.isNil(this.drivers.svk) && !_.isEmpty(this.schema)) {
+    if (_isNil(this.drivers.svk) && !_isEmpty(this.schema)) {
       // eslint-disable-next-line
       console.warn(
         'The SVK validation schema is defined',

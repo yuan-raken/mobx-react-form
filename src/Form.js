@@ -1,5 +1,11 @@
 import { action, computed, observable, asMap } from 'mobx';
-import _ from 'lodash';
+
+import _set from 'lodash/set';
+import _each from 'lodash/each';
+import _merge from 'lodash/merge';
+import _debounce from 'lodash/debounce';
+import _isString from 'lodash/isString';
+import _isFunction from 'lodash/isFunction';
 
 import Base from './Base';
 import Validator from './Validator';
@@ -39,9 +45,9 @@ export default class Form extends Base {
     this.$onReset = onReset;
 
     // load data from initializers methods
-    const initial = _.each({ setup, options, plugins, bindings },
-      (val, key) => _.isFunction(this[key])
-      ? _.merge(val, this[key].apply(this, [this]))
+    const initial = _each({ setup, options, plugins, bindings },
+      (val, key) => _isFunction(this[key])
+      ? _merge(val, this[key].apply(this, [this]))
       : val);
 
     this.state = new State({
@@ -60,7 +66,7 @@ export default class Form extends Base {
 
     this.initFields(initial.setup);
 
-    this.debouncedValidation = _.debounce(
+    this.debouncedValidation = _debounce(
       this.validate,
       this.state.options.get('validationDebounceWait'),
       this.state.options.get('validationDebounceOptions'),
@@ -72,7 +78,7 @@ export default class Form extends Base {
     }
 
     // execute onInit() if exist
-    if (_.isFunction(this.onInit)) {
+    if (_isFunction(this.onInit)) {
       this.onInit.apply(this, [this]);
     }
   }
@@ -93,12 +99,12 @@ export default class Form extends Base {
   }
 
   @computed get hasError() {
-    return _.isString(this.validator.genericErrorMessage)
+    return _isString(this.validator.genericErrorMessage)
      || this.check('hasError', true);
   }
 
   @computed get isValid() {
-    return !_.isString(this.validator.genericErrorMessage)
+    return !_isString(this.validator.genericErrorMessage)
       && this.check('isValid', true);
   }
 
@@ -149,7 +155,7 @@ export const prototypes = {
    */
   @action
   init($fields = null) {
-    _.set(this, 'fields', observable.map
+    _set(this, 'fields', observable.map
       ? observable.map({})
       : asMap({}));
 

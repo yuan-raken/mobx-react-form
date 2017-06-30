@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import { toJS } from 'mobx';
-import utils from '../utils';
+import { isPromise } from '../utils';
 
 /**
   Vanilla JavaScript Functions
@@ -45,7 +45,7 @@ export default class VJF {
     const res = this.handleFunctionResult($fn, field, form);
 
     // check and execute only if is a promise
-    if (utils.isPromise(res)) {
+    if (isPromise(res)) {
       const $p = res
         .then($res => field.setValidationAsyncData($res[0], $res[1]))
         .then(() => this.executeAsyncValidation(field))
@@ -106,7 +106,7 @@ export default class VJF {
     /**
       Handle "object / promise"
     */
-    if (utils.isPromise(res)) {
+    if (isPromise(res)) {
       return res; // the promise
     }
 

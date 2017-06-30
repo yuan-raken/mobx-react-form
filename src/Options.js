@@ -1,5 +1,5 @@
 import { observable, action, toJS, extendObservable } from 'mobx';
-import _ from 'lodash';
+import _has from 'lodash/has';
 
 export default class Options {
 
@@ -31,8 +31,8 @@ export default class Options {
 
   get(key = null, field = null) {
     // handle field option
-    if (_.has(field, 'path')) {
-      if (_.has(field.$options, key)) {
+    if (_has(field, 'path')) {
+      if (_has(field.$options, key)) {
         return field.$options[key];
       }
     }

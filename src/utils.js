@@ -1,6 +1,30 @@
-import _ from 'lodash';
+import _map from 'lodash/map';
+import _has from 'lodash/has';
+import _max from 'lodash/max';
+import _some from 'lodash/some';
+import _every from 'lodash/every';
+import _keys from 'lodash/keys';
+import _ary from 'lodash/ary';
+import _trim from 'lodash/trim';
+import _union from 'lodash/union';
+import _partial from 'lodash/partial';
+import _intersection from 'lodash/intersection';
+import _uniqueId from 'lodash/uniqueId';
+import _values from 'lodash/values';
+import _replace from 'lodash/replace';
+import _isNil from 'lodash/isNil';
+import _isInteger from 'lodash/isInteger';
+import _isArray from 'lodash/isArray';
+import _isDate from 'lodash/isDate';
+import _isBoolean from 'lodash/isBoolean';
+import _isString from 'lodash/isString';
+import _isEmpty from 'lodash/isEmpty';
+import _isUndefined from 'lodash/isUndefined';
+import _isObject from 'lodash/isObject';
+import _isPlainObject from 'lodash/isPlainObject';
 
-const props = {
+
+export const props = {
   booleans: ['hasError', 'isValid', 'isDirty', 'isPristine', 'isDefault', 'isEmpty', 'focused', 'touched', 'changed', 'disabled'],
   field: ['value', 'initial', 'default', 'label', 'placeholder', 'disabled', 'related', 'options', 'extra', 'bindings', 'type', 'error'],
   separated: ['values', 'initials', 'defaults', 'labels', 'placeholders', 'disabled', 'related', 'options', 'extra', 'bindings', 'types'],
@@ -21,24 +45,24 @@ const props = {
   },
 };
 
-const checkObserveItem = change => ({ key, to, type, exec }) =>
+export const checkObserveItem = change => ({ key, to, type, exec }) =>
   (change.type === type && change.name === key && change.newValue === to)
     && exec.apply(change, [change]);
 
-const checkObserve = collection => change =>
+export const checkObserve = collection => change =>
   collection.map(checkObserveItem(change));
 
-const checkPropType = ({ type, data }) => {
+export const checkPropType = ({ type, data }) => {
   let $check;
   switch (type) {
-    case 'some': $check = $data => _.some($data, Boolean); break;
-    case 'every': $check = $data => _.every($data, Boolean); break;
+    case 'some': $check = $data => _some($data, Boolean); break;
+    case 'every': $check = $data => _every($data, Boolean); break;
     default: $check = null;
   }
   return $check(data);
 };
 
-const hasProps = ($type, $data) => {
+export const hasProps = ($type, $data) => {
   let $props;
   switch ($type) {
     case 'booleans':
@@ -59,13 +83,13 @@ const hasProps = ($type, $data) => {
     ]; break;
     default: $props = null;
   }
-  return _.intersection($data, $props).length > 0;
+  return _intersection($data, $props).length > 0;
 };
 
 /**
   Check Allowed Properties
 */
-const allowedProps = (type, data) => {
+export const allowedProps = (type, data) => {
   if (hasProps(type, data)) return;
   const $msg = 'The selected property is not allowed';
   throw new Error(`${$msg} (${JSON.stringify(data)})`);
@@ -74,109 +98,84 @@ const allowedProps = (type, data) => {
 /**
   Throw Error if undefined Fields
 */
-const throwError = (path, fields, msg = null) => {
-  if (!_.isNil(fields)) return;
-  const $msg = _.isNil(msg) ? 'The selected field is not defined' : msg;
+export const throwError = (path, fields, msg = null) => {
+  if (!_isNil(fields)) return;
+  const $msg = _isNil(msg) ? 'The selected field is not defined' : msg;
   throw new Error(`${$msg} (${path})`);
 };
 
-const pathToStruct = (path) => {
+export const pathToStruct = (path) => {
   let struct;
-  struct = _.replace(path, new RegExp('[.]\\d+($|.)', 'g'), '[].');
-  struct = _.replace(struct, '..', '.');
-  struct = _.trim(struct, '.');
+  struct = _replace(path, new RegExp('[.]\\d+($|.)', 'g'), '[].');
+  struct = _replace(struct, '..', '.');
+  struct = _trim(struct, '.');
   return struct;
 };
 
-const hasSome = (obj, keys) =>
-  _.some(keys, _.partial(_.has, obj));
+export const hasSome = (obj, keys) =>
+  _some(keys, _partial(_has, obj));
 
-const isPromise = obj => (!!obj && typeof obj.then === 'function'
+export const isPromise = obj => (!!obj && typeof obj.then === 'function'
   && (typeof obj === 'object' || typeof obj === 'function'));
 
-const isStruct = ({ fields }) => (
-  _.isArray(fields) &&
-  _.every(fields, _.isString)
+export const isStruct = ({ fields }) => (
+  _isArray(fields) &&
+  _every(fields, _isString)
 );
 
-const isEmptyArray = field =>
-  (_.isEmpty(field) && _.isArray(field));
+export const isEmptyArray = field =>
+  (_isEmpty(field) && _isArray(field));
 
-const isArrayOfObjects = fields =>
-  _.isArray(fields) && _.every(fields, _.isPlainObject);
+export const isArrayOfObjects = fields =>
+  _isArray(fields) && _every(fields, _isPlainObject);
 
-const $getKeys = fields =>
-_.union(_.map(_.values(fields), values => _.keys(values))[0]);
+export const $getKeys = fields =>
+_union(_map(_values(fields), values => _keys(values))[0]);
 
-const hasUnifiedProps = ({ fields }) =>
+export const hasUnifiedProps = ({ fields }) =>
   !isStruct({ fields }) && hasProps('field', $getKeys(fields));
 
-const hasSeparatedProps = initial => (
+export const hasSeparatedProps = initial => (
   hasSome(initial, props.separated) ||
   hasSome(initial, props.validation)
 );
 
-const allowNested = (field, strictProps) =>
-  _.isObject(field) && !_.isDate(field) && !_.has(field, 'fields')
+export const allowNested = (field, strictProps) =>
+  _isObject(field) && !_isDate(field) && !_has(field, 'fields')
     && (!hasSome(field, props.field) || strictProps);
 
-const parseIntKeys = fields =>
- _.map(fields.keys(), _.ary(parseInt, 1));
+export const parseIntKeys = fields =>
+ _map(fields.keys(), _ary(parseInt, 1));
 
-const hasIntKeys = fields =>
-  _.every(parseIntKeys(fields), _.isInteger);
+export const hasIntKeys = fields =>
+  _every(parseIntKeys(fields), _isInteger);
 
-const maxKey = (fields) => {
-  const max = _.max(parseIntKeys(fields));
-  return _.isUndefined(max) ? 0 : max + 1;
+export const maxKey = (fields) => {
+  const max = _max(parseIntKeys(fields));
+  return _isUndefined(max) ? 0 : max + 1;
 };
 
-const makeId = path =>
-  _.uniqueId([_.replace(path, new RegExp('\\.', 'g'), '-'), '--'].join(''));
+export const makeId = path =>
+  _uniqueId([_replace(path, new RegExp('\\.', 'g'), '-'), '--'].join(''));
 
-const $isEvent = (obj) => {
-  if (_.isNil(obj) || typeof Event === 'undefined') return false;
-  return (obj instanceof Event || !_.isNil(obj.target)); // eslint-disable-line
+export const $isEvent = (obj) => {
+  if (_isNil(obj) || typeof Event === 'undefined') return false;
+  return (obj instanceof Event || !_isNil(obj.target)); // eslint-disable-line
 };
 
-const $hasFiles = $ =>
+export const $hasFiles = $ =>
   ($.target.files && $.target.files.length !== 0);
 
-const $isBool = ($, val) =>
-  _.isBoolean(val) &&
-  _.isBoolean($.target.checked);
+export const $isBool = ($, val) =>
+  _isBoolean(val) &&
+  _isBoolean($.target.checked);
 
-const $try = (...args) => {
+export const $try = (...args) => {
   let found = null;
 
   args.map(val =>
-    ((found === null) && !_.isNil(val))
+    ((found === null) && !_isNil(val))
       && (found = val));
 
   return found;
-};
-
-export default {
-  props,
-  checkObserve,
-  checkPropType,
-  hasProps,
-  allowedProps,
-  throwError,
-  isPromise,
-  isStruct,
-  isEmptyArray,
-  isArrayOfObjects,
-  pathToStruct,
-  hasUnifiedProps,
-  hasSeparatedProps,
-  allowNested,
-  parseIntKeys,
-  hasIntKeys,
-  maxKey,
-  makeId,
-  $isEvent,
-  $hasFiles,
-  $isBool,
-  $try,
 };

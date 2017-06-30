@@ -1,7 +1,10 @@
 import { observe, intercept } from 'mobx';
-import _ from 'lodash';
-import utils from '../utils';
-import parser from '../parser';
+
+import _merge from 'lodash/merge';
+import _each from 'lodash/each';
+
+import { parsePath } from '../parser';
+import { $try } from '../utils';
 
 /**
   Field Events
@@ -40,7 +43,7 @@ export default {
       ? `${key}@${$instance.path}`
       : key;
 
-    _.merge(this.state.disposers[type], {
+    _merge(this.state.disposers[type], {
       [$dkey]: (key === 'fields')
         ? ffn.apply(change => $call(change))
         : fn($instance, key, change => $call(change)),
@@ -60,8 +63,8 @@ export default {
    */
   disposeAll() {
     const dispose = disposer => disposer.apply();
-    _.each(this.state.disposers.interceptor, dispose);
-    _.each(this.state.disposers.observer, dispose);
+    _each(this.state.disposers.interceptor, dispose);
+    _each(this.state.disposers.observer, dispose);
     this.state.disposers = { interceptor: {}, observer: {} };
     return null;
   },
@@ -70,7 +73,7 @@ export default {
    Dispose Single Event (observe/intercept)
    */
   disposeSingle({ type, key = 'value', path = null }) {
-    const $path = parser.parsePath(utils.$try(path, this.path));
+    const $path = parsePath($try(path, this.path));
     // eslint-disable-next-line
     if (type === 'interceptor') key = `$${key}`; // target observables
     this.state.disposers[type][`${key}@${$path}`].apply();

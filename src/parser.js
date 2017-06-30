@@ -1,103 +1,136 @@
-import _ from 'lodash';
-import utils from './utils';
+import _map from 'lodash/map';
+import _each from 'lodash/each';
+import _merge from 'lodash/merge';
+import _set from 'lodash/set';
+import _get from 'lodash/get';
+import _has from 'lodash/has';
+import _split from 'lodash/split';
+import _filter from 'lodash/filter';
+import _reduce from 'lodash/reduce';
+import _reduceRight from 'lodash/reduceRight';
+import _startsWith from 'lodash/startsWith';
+import _trimEnd from 'lodash/trimEnd';
+import _last from 'lodash/last';
+import _endsWith from 'lodash/endsWith';
+import _without from 'lodash/without';
+import _values from 'lodash/values';
+import _replace from 'lodash/replace';
+import _parseInt from 'lodash/parseInt';
+import _isInteger from 'lodash/isInteger';
+import _isArray from 'lodash/isArray';
+import _isDate from 'lodash/isDate';
+import _isBoolean from 'lodash/isBoolean';
+import _isNumber from 'lodash/isNumber';
+import _isString from 'lodash/isString';
+import _isEmpty from 'lodash/isEmpty';
+import _isPlainObject from 'lodash/isPlainObject';
 
-const defaultClearValue = ({ value }) => {
-  if (_.isArray(value)) return [];
-  if (_.isDate(value)) return null;
-  if (_.isBoolean(value)) return false;
-  if (_.isNumber(value)) return 0;
-  if (_.isString(value)) return '';
+import {
+  $try,
+  isStruct,
+  allowNested,
+  pathToStruct,
+  hasUnifiedProps,
+  isEmptyArray as $isEmptyArray,
+  isArrayOfObjects } from './utils';
+
+export const defaultClearValue = ({ value }) => {
+  if (_isArray(value)) return [];
+  if (_isDate(value)) return null;
+  if (_isBoolean(value)) return false;
+  if (_isNumber(value)) return 0;
+  if (_isString(value)) return '';
   return undefined;
 };
 
-const defaultValue = ({ type, isEmptyArray = false }) => {
+export const defaultValue = ({ type, isEmptyArray = false }) => {
   if (type === 'date') return null;
   if (type === 'checkbox') return false;
   if (type === 'number') return 0;
   return isEmptyArray ? [] : '';
 };
 
-const parsePath = (path) => {
+export const parsePath = (path) => {
   let $path = path;
-  $path = _.replace($path, new RegExp('\\[', 'g'), '.');
-  $path = _.replace($path, new RegExp('\\]', 'g'), '');
+  $path = _replace($path, new RegExp('\\[', 'g'), '.');
+  $path = _replace($path, new RegExp('\\]', 'g'), '');
   return $path;
 };
 
-const parseFieldValue = (parser, { type, isEmptyArray, separated, unified, initial }) =>
-  parser(utils.$try(separated, unified, initial, defaultValue({ type, isEmptyArray })));
+export const parseFieldValue = (parser, { type, isEmptyArray, separated, unified, initial }) =>
+  parser($try(separated, unified, initial, defaultValue({ type, isEmptyArray })));
 
 // make integers labels empty
-const parseGetLabel = label =>
-  _.isInteger(_.parseInt(label)) ? '' : label;
+export const parseGetLabel = label =>
+  _isInteger(_parseInt(label)) ? '' : label;
 
-const parseArrayProp = ($val, $prop) => {
-  const $values = _.values($val);
+export const parseArrayProp = ($val, $prop) => {
+  const $values = _values($val);
   if ($prop === 'value' || $prop === 'initial' || $prop === 'default') {
-    return _.without($values, null, undefined, '');
+    return _without($values, null, undefined, '');
   }
   return $values;
 };
 
-const parseCheckArray = (field, value, prop) =>
+export const parseCheckArray = (field, value, prop) =>
   field.hasIncrementalNestedFields
     ? parseArrayProp(value, prop)
     : value;
 
-const parseCheckFormatter = ($field, $prop) =>
+export const parseCheckFormatter = ($field, $prop) =>
   ($prop === 'value')
     ? $field.$formatter($field[$prop])
     : $field[$prop];
 
-const defineFieldsFromStruct = (struct, add = false) =>
-  _.reduceRight(struct, ($, name) => {
+export const defineFieldsFromStruct = (struct, add = false) =>
+  _reduceRight(struct, ($, name) => {
     const obj = {};
-    if (_.endsWith(name, '[]')) {
+    if (_endsWith(name, '[]')) {
       const val = (add) ? [$] : [];
-      obj[_.trimEnd(name, '[]')] = val;
+      obj[_trimEnd(name, '[]')] = val;
       return obj;
     }
     // no brakets
     const prev = struct[struct.indexOf(name) - 1];
-    const stop = _.endsWith(prev, '[]') && (_.last(struct) === name);
+    const stop = _endsWith(prev, '[]') && (_last(struct) === name);
     if (!add && stop) return obj;
     obj[name] = $;
     return obj;
   }, {});
 
-const handleFieldsArrayOfStrings = ($fields, add = false) => {
+export const handleFieldsArrayOfStrings = ($fields, add = false) => {
   let fields = $fields;
   // handle array with field struct (strings)
-  if (utils.isStruct({ fields })) {
-    fields = _.reduce(fields, ($obj, $) => {
-      const pathStruct = _.split($, '.');
+  if (isStruct({ fields })) {
+    fields = _reduce(fields, ($obj, $) => {
+      const pathStruct = _split($, '.');
       // as array of strings (with empty values)
       if (!pathStruct.length) return Object.assign($obj, { [$]: '' });
       // define flat or nested fields from pathStruct
-      return _.merge($obj, defineFieldsFromStruct(pathStruct, add));
+      return _merge($obj, defineFieldsFromStruct(pathStruct, add));
     }, {});
   }
   return fields;
 };
 
-const handleFieldsArrayOfObjects = ($fields) => {
+export const handleFieldsArrayOfObjects = ($fields) => {
   let fields = $fields;
   // handle array of objects (with unified props)
-  if (utils.isArrayOfObjects(fields)) {
-    fields = _.reduce(fields, ($obj, $) => {
-      if (!_.has($, 'name')) return undefined;
+  if (isArrayOfObjects(fields)) {
+    fields = _reduce(fields, ($obj, $) => {
+      if (!_has($, 'name')) return undefined;
       return Object.assign($obj, { [$.name]: $ });
     }, {});
   }
   return fields;
 };
 
-const handleFieldsNested = (fields, strictProps = true) =>
-  _.reduce(fields, (obj, field, key) => {
-    if (utils.allowNested(field, strictProps)) {
+export const handleFieldsNested = (fields, strictProps = true) =>
+  _reduce(fields, (obj, field, key) => {
+    if (allowNested(field, strictProps)) {
       // define nested field
       return Object.assign(obj, {
-        [key]: { fields: utils.isEmptyArray(field) ? [] : handleFieldsNested(field) },
+        [key]: { fields: $isEmptyArray(field) ? [] : handleFieldsNested(field) },
       });
     }
     return Object.assign(obj, { [key]: field });
@@ -124,9 +157,9 @@ TO:
 }]
 
 */
-const mapNestedValuesToUnifiedValues = data =>
-  _.isPlainObject(data)
-    ? _.map(data, (value, name) => ({ value, name }))
+export const mapNestedValuesToUnifiedValues = data =>
+  _isPlainObject(data)
+    ? _map(data, (value, name) => ({ value, name }))
     : undefined;
 
 /* reduceValuesToUnifiedFields
@@ -158,8 +191,8 @@ TO:
 };
 
 */
-const reduceValuesToUnifiedFields = values =>
-  _.reduce(values, (obj, value, key) =>
+export const reduceValuesToUnifiedFields = values =>
+  _reduce(values, (obj, value, key) =>
     Object.assign(obj, { [key]: { value,
       fields: mapNestedValuesToUnifiedValues(value),
     } }), {});
@@ -167,23 +200,23 @@ const reduceValuesToUnifiedFields = values =>
 /*
   Fallback Unified Props to Sepated Mode
 */
-const handleFieldsPropsFallback = (fields, initial) => {
-  if (!_.has(initial, 'values')) return fields;
+export const handleFieldsPropsFallback = (fields, initial) => {
+  if (!_has(initial, 'values')) return fields;
   // if the 'values' object is passed in constructor
   // then update the fields definitions
   let values = initial.values;
-  if (utils.hasUnifiedProps({ fields })) {
+  if (hasUnifiedProps({ fields })) {
     values = reduceValuesToUnifiedFields(values);
   }
-  return _.merge(fields, values);
+  return _merge(fields, values);
 };
 
-const mergeSchemaDefaults = (fields, validator) => {
+export const mergeSchemaDefaults = (fields, validator) => {
   if (validator) {
     const properties = validator.schema.properties;
-    if (_.isEmpty(fields) && !!properties) {
-      _.each(properties, (prop, key) => {
-        _.set(fields, key, {
+    if (_isEmpty(fields) && !!properties) {
+      _each(properties, (prop, key) => {
+        _set(fields, key, {
           value: prop.default,
           label: prop.title,
         });
@@ -193,7 +226,7 @@ const mergeSchemaDefaults = (fields, validator) => {
   return fields;
 };
 
-const prepareFieldsData = (initial, strictProps = true) => {
+export const prepareFieldsData = (initial, strictProps = true) => {
   let fields = initial.fields || {};
   fields = handleFieldsArrayOfStrings(fields, false);
   fields = handleFieldsArrayOfObjects(fields);
@@ -202,26 +235,10 @@ const prepareFieldsData = (initial, strictProps = true) => {
   return fields;
 };
 
-const pathToFieldsTree = (struct, path, n = 0, add = false) => {
-  const structPath = utils.pathToStruct(path);
-  const structArray = _.filter(struct, item => _.startsWith(item, structPath));
+export const pathToFieldsTree = (struct, path, n = 0, add = false) => {
+  const structPath = pathToStruct(path);
+  const structArray = _filter(struct, item => _startsWith(item, structPath));
   const $tree = handleFieldsArrayOfStrings(structArray, add);
-  const $struct = _.replace(structPath, new RegExp('\\[]', 'g'), `[${n}]`);
-  return handleFieldsNested(_.get($tree, $struct));
-};
-
-export default {
-  defaultValue,
-  defaultClearValue,
-  parseFieldValue,
-  parsePath,
-  parseGetLabel,
-  parseArrayProp,
-  parseCheckArray,
-  parseCheckFormatter,
-  mergeSchemaDefaults,
-  handleFieldsNested,
-  handleFieldsArrayOfStrings,
-  prepareFieldsData,
-  pathToFieldsTree,
+  const $struct = _replace(structPath, new RegExp('\\[]', 'g'), `[${n}]`);
+  return handleFieldsNested(_get($tree, $struct));
 };

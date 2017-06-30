@@ -1,6 +1,11 @@
-import _ from 'lodash';
-import utils from '../utils';
-import parser from '../parser';
+import _split from 'lodash/split';
+import _head from 'lodash/head';
+import _each from 'lodash/each';
+import _trim from 'lodash/trim';
+import _isNil from 'lodash/isNil';
+
+import { parsePath } from '../parser';
+import { $try, throwError } from '../utils';
 
 /**
   Field Utils
@@ -11,21 +16,20 @@ export default {
    Fields Selector
    */
   select(path, fields = null, isStrict = true) {
-    const $path = parser.parsePath(path);
+    const $path = parsePath(path);
+    const $keys = _split($path, '.');
+    const $head = _head($keys);
 
-    const keys = _.split($path, '.');
-    const head = _.head(keys);
+    $keys.shift();
 
-    keys.shift();
-
-    let $fields = _.isNil(fields)
-      ? this.fields.get(head)
-      : fields.get(head);
+    let $fields = _isNil(fields)
+      ? this.fields.get($head)
+      : fields.get($head);
 
     let stop = false;
-    _.each(keys, ($key) => {
+    _each($keys, ($key) => {
       if (stop) return;
-      if (_.isNil($fields)) {
+      if (_isNil($fields)) {
         $fields = undefined;
         stop = true;
       } else {
@@ -33,7 +37,7 @@ export default {
       }
     });
 
-    if (isStrict) utils.throwError(path, $fields);
+    if (isStrict) throwError(path, $fields);
 
     return $fields;
   },
@@ -42,10 +46,10 @@ export default {
     Get Container
    */
   container(path) {
-    const $path = parser.parsePath(utils.$try(path, this.path));
-    const cpath = _.trim($path.replace(new RegExp('[^./]+$'), ''), '.');
+    const $path = parsePath($try(path, this.path));
+    const cpath = _trim($path.replace(new RegExp('[^./]+$'), ''), '.');
 
-    if (!!this.path && _.isNil(path)) {
+    if (!!this.path && _isNil(path)) {
       return this.state.form.select(cpath, null, false);
     }
 
@@ -106,7 +110,7 @@ export default {
    */
   each(iteratee, fields = null, depth = 0) {
     const $fields = fields || this.fields;
-    _.each($fields.values(), (field, index) => {
+    _each($fields.values(), (field, index) => {
       iteratee(field, index, depth);
 
       if (field.fields.size !== 0) {

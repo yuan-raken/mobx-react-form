@@ -1,7 +1,16 @@
 import { action } from 'mobx';
-import _ from 'lodash';
-import utils from '../utils';
-import parser from '../parser';
+
+import _get from 'lodash/get';
+import _each from 'lodash/each';
+import _isNil from 'lodash/isNil';
+import _trimStart from 'lodash/trimStart';
+
+import {
+  pathToStruct } from '../utils';
+
+import {
+  prepareFieldsData,
+  mergeSchemaDefaults } from '../parser';
 
 /**
   Field Initializer
@@ -9,24 +18,24 @@ import parser from '../parser';
 export default {
 
   initFields(initial, update) {
-    const $path = key => _.trimStart([this.path, key].join('.'), '.');
+    const $path = key => _trimStart([this.path, key].join('.'), '.');
 
     let fields;
-    fields = parser.prepareFieldsData(initial, this.state.strict);
-    fields = parser.mergeSchemaDefaults(fields, this.validator);
+    fields = prepareFieldsData(initial, this.state.strict);
+    fields = mergeSchemaDefaults(fields, this.validator);
 
     // create fields
-    _.each(fields, (field, key) =>
-      _.isNil(this.select($path(key), null, false)) &&
+    _each(fields, (field, key) =>
+      _isNil(this.select($path(key), null, false)) &&
         this.initField(key, $path(key), field, update));
   },
 
   @action
   initField(key, path, data, update = false) {
     const initial = this.state.get('current', 'props');
-    const struct = utils.pathToStruct(path);
+    const struct = pathToStruct(path);
     // try to get props from separated objects
-    const $try = prop => _.get(initial[prop], struct);
+    const $try = prop => _get(initial[prop], struct);
 
     const props = {
       $value: $try('values'),

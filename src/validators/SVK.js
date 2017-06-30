@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import utils from '../utils';
+import { isPromise } from '../utils';
 
 /**
   Schema Validation Keywords
@@ -61,7 +61,7 @@ export default class SVK {
     const data = { [field.path]: field.value };
     const validate = this.validate(this.parseValues(data));
     // check if is $async schema
-    if (utils.isPromise(validate)) {
+    if (isPromise(validate)) {
       const $p = validate
         .then(() => field.setValidationAsyncData(true))
         .catch(err => err && this.handleAsyncError(field, err.errors))

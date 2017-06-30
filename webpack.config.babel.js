@@ -4,6 +4,18 @@ const loaders = [{
   test: /\.js$/,
   loader: 'babel-loader',
   include: join(__dirname, 'src'),
+  query: {
+    presets: [
+      ['es2015', { modules: false }],
+      'stage-0',
+    ],
+    plugins: [
+      'transform-decorators-legacy',
+      'transform-class-properties',
+      'add-module-exports',
+      'lodash',
+    ],
+  },
 }, {
   test: /\.json$/,
   loader: 'json-loader',
@@ -18,9 +30,8 @@ export default {
     libraryTarget: 'umd',
   },
   resolve: {
-    root: join(__dirname, 'src'),
-    modulesDirectories: ['node_modules'],
-    extensions: ['', '.js', '.json'],
+    modules: ['node_modules'],
+    extensions: ['.js', '.json'],
   },
   externals: {
     mobx: 'mobx',

@@ -1,5 +1,5 @@
 import { computed } from 'mobx';
-import _ from 'lodash';
+import _isFunction from 'lodash/isFunction';
 
 import {
   $isEvent,
@@ -24,7 +24,7 @@ export default class Base {
    */
   intercept = opt =>
     this.MOBXEvent(
-      _.isFunction(opt)
+      _isFunction(opt)
         ? { type: 'interceptor', call: opt }
         : { type: 'interceptor', ...opt },
     );
@@ -34,7 +34,7 @@ export default class Base {
    */
   observe = opt =>
     this.MOBXEvent(
-      _.isFunction(opt)
+      _isFunction(opt)
         ? { type: 'observer', call: opt }
         : { type: 'observer', ...opt },
     );

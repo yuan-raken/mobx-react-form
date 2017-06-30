@@ -1,5 +1,22 @@
 import { observable, observe, action, computed, isObservableArray, toJS, asMap, untracked } from 'mobx';
-import _ from 'lodash';
+
+import _has from 'lodash/has';
+import _map from 'lodash/map';
+import _head from 'lodash/head';
+import _omit from 'lodash/omit';
+import _debounce from 'lodash/debounce';
+import _isEqual from 'lodash/isEqual';
+import _isDate from 'lodash/isDate';
+import _isNil from 'lodash/isNil';
+import _isArray from 'lodash/isArray';
+import _isBoolean from 'lodash/isBoolean';
+import _isEmpty from 'lodash/isEmpty';
+import _isString from 'lodash/isString';
+import _isNumber from 'lodash/isNumber';
+import _toNumber from 'lodash/toNumber';
+import _toString from 'lodash/toString';
+import _isPlainObject from 'lodash/isPlainObject';
+
 import Base from './Base';
 
 import {
@@ -83,7 +100,7 @@ export default class Field extends Base {
 
     this.incremental = (this.hasIncrementalNestedFields !== 0);
 
-    this.debouncedValidation = _.debounce(
+    this.debouncedValidation = _debounce(
       this.validate,
       this.state.options.get('validationDebounceWait', this),
       this.state.options.get('validationDebounceOptions', this),
@@ -100,10 +117,10 @@ export default class Field extends Base {
 
   @computed get checkValidationErrors() {
     return ((this.validationAsyncData.valid === false)
-      && !_.isEmpty(this.validationAsyncData))
-      || !_.isEmpty(this.validationErrorStack)
-      || _.isString(this.errorAsync)
-      || _.isString(this.errorSync);
+      && !_isEmpty(this.validationAsyncData))
+      || !_isEmpty(this.validationErrorStack)
+      || _isString(this.errorAsync)
+      || _isString(this.errorSync);
   }
 
   @computed get checked() {
@@ -118,9 +135,9 @@ export default class Field extends Base {
     if (this.$value === newVal) return;
     // handle numbers
     if (this.state.options.get('autoParseNumbers', this) === true) {
-      if (_.isNumber(this.$initial)) {
+      if (_isNumber(this.$initial)) {
         if (new RegExp('^-?\\d+(,\\d+)*(\\.\\d+([eE]\\d+)?)?$', 'g').exec(newVal)) {
-          this.$value = _.toNumber(newVal);
+          this.$value = _toNumber(newVal);
           return;
         }
       }
@@ -207,27 +224,27 @@ export default class Field extends Base {
   @computed get isDirty() {
     return this.hasNestedFields
       ? this.check('isDirty', true)
-      : !_.isEqual(this.$default, this.value);
+      : !_isEqual(this.$default, this.value);
   }
 
   @computed get isPristine() {
     return this.hasNestedFields
       ? this.check('isPristine', true)
-      : _.isEqual(this.$default, this.value);
+      : _isEqual(this.$default, this.value);
   }
 
   @computed get isDefault() {
     return this.hasNestedFields
       ? this.check('isDefault', true)
-      : _.isEqual(this.$default, this.value);
+      : _isEqual(this.$default, this.value);
   }
 
   @computed get isEmpty() {
     if (this.hasNestedFields) return this.check('isEmpty', true);
-    if (_.isBoolean(this.value)) return !!this.$value;
-    if (_.isNumber(this.value)) return false;
-    if (_.isDate(this.value)) return false;
-    return _.isEmpty(this.value);
+    if (_isBoolean(this.value)) return !!this.$value;
+    if (_isNumber(this.value)) return false;
+    if (_isDate(this.value)) return false;
+    return _isEmpty(this.value);
   }
 
   @computed get focused() {
@@ -259,8 +276,8 @@ export default class Field extends Base {
         : $.target.value;
 
     // assume "v" or "e" are the values
-    if (_.isNil(e) || _.isNil(e.target)) {
-      if (!_.isNil(v) && !_.isNil(v.target)) {
+    if (_isNil(e) || _isNil(e.target)) {
+      if (!_isNil(v) && !_isNil(v.target)) {
         v = $get(v); // eslint-disable-line
       }
 
@@ -268,7 +285,7 @@ export default class Field extends Base {
       return;
     }
 
-    if (!_.isNil(e.target)) {
+    if (!_isNil(e.target)) {
       this.value = $get(e);
       return;
     }
@@ -284,7 +301,7 @@ export default class Field extends Base {
     let files = null;
 
     if ($isEvent(e) && $hasFiles(e)) {
-      files = _.map(e.target.files);
+      files = _map(e.target.files);
     }
 
     this.files = files || all;
@@ -312,7 +329,7 @@ export const prototypes = {
     this.path = $path;
     this.id = makeId(this.path);
 
-    const isEmptyArray = (_.has($data, 'fields') && _.isArray($data.fields));
+    const isEmptyArray = (_has($data, 'fields') && _isArray($data.fields));
     const checkArray = val => isEmptyArray ? [] : val;
 
     const {
@@ -340,9 +357,9 @@ export const prototypes = {
     } = $props;
 
     // eslint-disable-next-line
-    if (_.isNil($data)) $data = '';
+    if (_isNil($data)) $data = '';
 
-    if (_.isPlainObject($data)) {
+    if (_isPlainObject($data)) {
       const {
         options,
         extra,
@@ -391,7 +408,7 @@ export const prototypes = {
         initial: checkArray(this.$initial),
       });
 
-      this.name = _.toString(name || $key);
+      this.name = _toString(name || $key);
       this.$value = this.$initial;
       this.$label = $label || label || this.name;
       this.$placeholder = $placeholder || placeholder || '';
@@ -408,7 +425,7 @@ export const prototypes = {
     }
 
     /* The field IS the value here */
-    this.name = _.toString($key);
+    this.name = _toString($key);
     this.type = $type || 'text';
     this.$onDrop = $onDrop || null;
     this.$onSubmit = $onSubmit || null;
@@ -453,12 +470,12 @@ export const prototypes = {
         ? this.get(key, false)
         : untracked(() => this.get(key, false));
 
-      return !_.isEmpty($val) ? $val : [];
+      return !_isEmpty($val) ? $val : [];
     }
 
     const val = this[`$${key}`];
 
-    if (_.isArray(val) || isObservableArray(val)) {
+    if (_isArray(val) || isObservableArray(val)) {
       return [].slice.call(val);
     }
 
@@ -467,7 +484,7 @@ export const prototypes = {
 
   checkDVRValidationPlugin() {
     const drivers = this.state.form.validator.drivers;
-    if (_.isNil(drivers.dvr) && !_.isNil(this.rules)) {
+    if (_isNil(drivers.dvr) && !_isNil(this.rules)) {
       // eslint-disable-next-line
       console.warn(
         'The DVR validation rules are defined',
@@ -479,8 +496,8 @@ export const prototypes = {
 
   @action
   initNestedFields(field, update) {
-    const fields = _.isNil(field) ? null : field.fields;
-    if (_.isArray(fields)) this.hasInitialNestedFields = true;
+    const fields = _isNil(field) ? null : field.fields;
+    if (_isArray(fields)) this.hasInitialNestedFields = true;
     this.initFields({ fields }, update);
   },
 
@@ -491,7 +508,7 @@ export const prototypes = {
       return;
     }
 
-    if (_.isArray(message)) {
+    if (_isArray(message)) {
       this.validationErrorStack = message;
       this.showErrors(true);
       return;
@@ -567,7 +584,7 @@ export const prototypes = {
   @action
   showErrors(show = true) {
     this.showError = show;
-    this.errorSync = _.head(this.validationErrorStack);
+    this.errorSync = _head(this.validationErrorStack);
     this.each(field => field.showErrors(show));
   },
 
@@ -598,12 +615,12 @@ export const prototypes = {
   },
 
   initMOBXEvent(type) {
-    if (!_.isArray(this[`$${type}`])) return;
+    if (!_isArray(this[`$${type}`])) return;
 
     let fn;
     if (type === 'observers') fn = this.observe;
     if (type === 'interceptors') fn = this.intercept;
-    this[`$${type}`].map(obj => fn(_.omit(obj, 'path')));
+    this[`$${type}`].map(obj => fn(_omit(obj, 'path')));
   },
 
   bind(props = {}) {
