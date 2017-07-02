@@ -1,6 +1,6 @@
 import { join } from 'path';
 
-const loaders = [{
+const rules = [{
   test: /\.js$/,
   loader: 'babel-loader',
   include: join(__dirname, 'src'),
@@ -13,7 +13,7 @@ const loaders = [{
       'transform-decorators-legacy',
       'transform-class-properties',
       'add-module-exports',
-      'lodash',
+      // 'lodash',
     ],
   },
 }, {
@@ -36,5 +36,5 @@ export default {
   externals: {
     mobx: 'mobx',
   },
-  module: { loaders },
+  module: { rules },
 };

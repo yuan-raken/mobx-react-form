@@ -1,4 +1,11 @@
-import _ from 'lodash';
+import _first from 'lodash/first';
+import _split from 'lodash/split';
+import _extend from 'lodash/extend';
+import _difference from 'lodash/difference';
+import _intersection from 'lodash/intersection';
+import _isEmpty from 'lodash/isEmpty';
+import _isString from 'lodash/isString';
+import _isFunction from 'lodash/isFunction';
 
 /**
   Declarative Validation Rules
@@ -39,11 +46,11 @@ export default class DVR {
 
   extendValidator() {
     // extend the validator with custom "registerAsyncRule" method
-    _.extend(this.validator, {
+    _extend(this.validator, {
       registerAsyncRule: (key, callback) => this.registerAsyncRule(key, callback),
     });
     // extend using "extend" callback
-    if (_.isFunction(this.extend)) this.extend(this.validator);
+    if (_isFunction(this.extend)) this.extend(this.validator);
   }
 
   validateField(field, form) {
@@ -57,7 +64,7 @@ export default class DVR {
   validateFieldSync(field, form, data) {
     const $rules = this.rules(field.rules, 'sync');
     // exit if no rules found
-    if (_.isEmpty($rules[0])) return;
+    if (_isEmpty($rules[0])) return;
     // get field rules
     const rules = { [field.path]: $rules };
     // create the validator instance
@@ -68,13 +75,13 @@ export default class DVR {
     // check validation
     if (validation.passes()) return;
     // the validation is failed, set the field errorbre
-    field.invalidate(_.first(validation.errors.get(field.path)));
+    field.invalidate(_first(validation.errors.get(field.path)));
   }
 
   validateFieldAsync(field, form, data) {
     const $rules = this.rules(field.rules, 'async');
     // exit if no rules found
-    if (_.isEmpty($rules[0])) return;
+    if (_isEmpty($rules[0])) return;
     // get field rules
     const rules = { [field.path]: $rules };
     // create the validator instance
@@ -100,7 +107,7 @@ export default class DVR {
   }
 
   handleAsyncFails(field, validation, resolve) {
-    field.setValidationAsyncData(false, _.first(validation.errors.get(field.path)));
+    field.setValidationAsyncData(false, _first(validation.errors.get(field.path)));
     this.executeAsyncValidation(field);
     field.showAsyncErrors();
     resolve();
@@ -119,9 +126,9 @@ export default class DVR {
 
   rules(rules, type) {
     let diff = [];
-    const $rules = _.isString(rules) ? _.split(rules, '|') : rules;
-    if (type === 'sync') diff = _.difference($rules, this.asyncRules);
-    if (type === 'async') diff = _.intersection($rules, this.asyncRules);
+    const $rules = _isString(rules) ? _split(rules, '|') : rules;
+    if (type === 'sync') diff = _difference($rules, this.asyncRules);
+    if (type === 'async') diff = _intersection($rules, this.asyncRules);
     return diff;
   }
 }

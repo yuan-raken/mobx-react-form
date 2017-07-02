@@ -1,4 +1,9 @@
-import _ from 'lodash';
+import _isBoolean from 'lodash/isBoolean';
+import _isArray from 'lodash/isArray';
+import _isFunction from 'lodash/isFunction';
+import _isString from 'lodash/isString';
+import _isPlainObject from 'lodash/isPlainObject';
+
 import { toJS } from 'mobx';
 import { isPromise } from '../utils';
 
@@ -12,7 +17,7 @@ export default class VJF {
   options;
 
   constructor(plugin, { promises = [], options = {} }) {
-    if (_.isPlainObject(plugin)) {
+    if (_isPlainObject(plugin)) {
       this.validator = plugin;
     }
 
@@ -28,12 +33,12 @@ export default class VJF {
     const $fn = toJS(field.validators);
 
     // map only if is an array of validator functions
-    if (_.isArray($fn)) {
+    if (_isArray($fn)) {
       $fn.map(fn => this.collectData(fn, field, form));
     }
 
     // it's just one function
-    if (_.isFunction($fn)) {
+    if (_isFunction($fn)) {
       this.collectData($fn, field, form);
     }
 
@@ -83,7 +88,7 @@ export default class VJF {
     /**
       Handle "array"
     */
-    if (_.isArray(res)) {
+    if (_isArray(res)) {
       const isValid = res[0] || false;
       const message = res[1] || 'Error';
       return [isValid, message];
@@ -92,14 +97,14 @@ export default class VJF {
     /**
       Handle "boolean"
     */
-    if (_.isBoolean(res)) {
+    if (_isBoolean(res)) {
       return [res, 'Error'];
     }
 
     /**
       Handle "string"
     */
-    if (_.isString(res)) {
+    if (_isString(res)) {
       return [false, res];
     }
 

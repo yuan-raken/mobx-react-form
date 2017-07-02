@@ -1,4 +1,14 @@
-import _ from 'lodash';
+import _find from 'lodash/find';
+import _trimStart from 'lodash/trimStart';
+import _trim from 'lodash/trim';
+import _includes from 'lodash/includes';
+import _omitBy from 'lodash/omitBy';
+import _isNaN from 'lodash/isNaN';
+import _isNull from 'lodash/isNull';
+import _isEmpty from 'lodash/isEmpty';
+import _isUndefined from 'lodash/isUndefined';
+import _isFunction from 'lodash/isFunction';
+
 import { isPromise } from '../utils';
 
 /**
@@ -52,7 +62,7 @@ export default class SVK {
     // create ajv instance
     const ajvInstance = new AJV(this.options.get('ajv'));
     // extend ajv using "extend" callback
-    if (_.isFunction(this.extend)) this.extend(ajvInstance);
+    if (_isFunction(this.extend)) this.extend(ajvInstance);
     // create ajvInstance validator (compiling rules)
     this.validate = ajvInstance.compile(this.schema);
   }
@@ -79,7 +89,7 @@ export default class SVK {
   handleSyncError(field, errors) {
     const fieldErrorObj = this.findError(field.key, errors);
     // if fieldErrorObj is not undefined, the current field is invalid.
-    if (_.isUndefined(fieldErrorObj)) return;
+    if (_isUndefined(fieldErrorObj)) return;
     // the current field is now invalid
     // add additional info to the message
     const msg = `${field.label} ${fieldErrorObj.message}`;
@@ -91,7 +101,7 @@ export default class SVK {
     // find current field error message from ajv errors
     const fieldErrorObj = this.findError(field.path, errors);
     // if fieldErrorObj is not undefined, the current field is invalid.
-    if (_.isUndefined(fieldErrorObj)) return;
+    if (_isUndefined(fieldErrorObj)) return;
     // the current field is now invalid
     // add additional info to the message
     const msg = `${field.label} ${fieldErrorObj.message}`;
@@ -100,12 +110,12 @@ export default class SVK {
   }
 
   findError(path, errors) {
-    return _.find(errors, ({ dataPath }) => {
+    return _find(errors, ({ dataPath }) => {
       let $dataPath;
-      $dataPath = _.trimStart(dataPath, '.');
-      $dataPath = _.trim($dataPath, '[\'');
-      $dataPath = _.trim($dataPath, '\']');
-      return _.includes($dataPath, `${path}`);
+      $dataPath = _trimStart(dataPath, '.');
+      $dataPath = _trim($dataPath, '[\'');
+      $dataPath = _trim($dataPath, '\']');
+      return _includes($dataPath, `${path}`);
     });
   }
 
@@ -117,7 +127,7 @@ export default class SVK {
 
   parseValues(values) {
     if (this.options.get('allowRequired') === true) {
-      return _.omitBy(values, (_.isEmpty || _.isNull || _.isUndefined || _.isNaN));
+      return _omitBy(values, (_isEmpty || _isNull || _isUndefined || _isNaN));
     }
     return values;
   }
